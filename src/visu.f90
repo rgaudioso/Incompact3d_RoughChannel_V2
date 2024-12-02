@@ -40,7 +40,7 @@ contains
     use MPI
     use param, only : ilmn, iscalar, ilast, ifirst, ioutput, istret
     use variables, only : numscalar, prec, nvisu
-    use param, only : dx, dy, dz
+    use param, only : dx, dy, dz, iibm
     use decomp_2d_io, only : decomp_2d_init_io, decomp_2d_open_io, decomp_2d_append_mode
     use decomp_2d_io, only : decomp_2d_register_variable
 
@@ -102,6 +102,7 @@ contains
           call decomp_2d_register_variable(io_name, scname, 1, 0, output2D, mytype)
        enddo
     endif
+    if (iibm.eq.2) call decomp_2d_register_variable(io_name, "epsi", 1, 0, output2D, mytype)
     
   end subroutine visu_init
 
@@ -174,7 +175,7 @@ contains
 
     use decomp_2d_io, only : decomp_2d_start_io
 
-    use param, only : nrhotime, ilmn, iscalar, ioutput, irestart
+    use param, only : nrhotime, ilmn, iscalar, ioutput, irestart, iibm
 
     use variables, only : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
     use variables, only : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
@@ -269,6 +270,9 @@ contains
         call write_field(phi1(:,:,:,is), ".", trim(scname), num, .true.)
       enddo
     endif
+    
+   ! Write epsi
+   if (iibm==2) call write_field(ep1,".","epsi",num,.true.)
 
   end subroutine write_snapshot
 
