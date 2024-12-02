@@ -471,7 +471,6 @@ contains
     real(mytype)                                    :: r,ym,zm,xm
     !LOCALS
     integer                                         :: i,j,k,irank,code,is
-    integer                                         :: iprint
     real(mytype)                                    :: hraf
      
     epsi(:,:,:) = zero
@@ -480,10 +479,7 @@ contains
     ! Use these dimensions when the map matches the grid resolution
     !nrows = nz
     !ncols = nx    
-
-    !====DEBUG
-    iprint=0
-
+        
     !Epsilon matrix
     do k=nzi,nzf
         zm=zzp(k)
@@ -506,16 +502,7 @@ contains
 		    elseif (ym.gt.yly/two.and.abs(ym-(yly-hraf)).lt.tol) then
 	               epsi(i,j,k) = remp
                     endif
-                  
-                !====DEBUG
-                if (iprint.eq.1) then
-                    do irank=-100*nrank,100
-                        if (irank.eq.nrank) then
-                            print*, 'eps=', xxp(i), yyp(j), zzp(k), epsi(i,j,k)
-                        endif
-                    enddo
-                endif
-                !========
+ 
             enddo
         enddo
     enddo
