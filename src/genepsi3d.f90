@@ -17,7 +17,7 @@ contains
     USE param, only : zero, one, dx, dz
     USE decomp_2d, only : xstart, xend, xsize
     !USE decomp_2d_io
-    USE variables, only : yp, ny
+    USE variables, only : xp,yp,zp,nx,ny,nz
 
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)), intent(inout) :: ep1
@@ -37,7 +37,8 @@ contains
     end if
     !###################################################################
     ep1(:,:,:)=zero
-    call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
+    !call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
+    call geomcomplex(ep1,nx,xstart(1),xend(1),ny,xstart(2),xend(2),nz,xstart(3),xend(3),xp,yp,zp,one)
 
 #ifdef DEBG
     if (nrank .eq. 0) write(*,*)'# body_init done'
@@ -134,7 +135,7 @@ contains
   subroutine genepsi3d(ep1)
 
     USE variables, only : nx,ny,nz,nxm,nym,nzm,yp, ilist
-    USE param, only : xlx,yly,zlz,dx,dy,dz,izap,npif,nclx,ncly,nclz,istret,itype,itype_sandbox
+    USE param, only : xlx,yly,zlz,dx,dy,dz,izap,npif,nclx,ncly,nclz,istret,itype,itype_rough,itype_sandbox
     use param, only : itime
     USE complex_geometry
     use decomp_2d
@@ -198,7 +199,7 @@ contains
        nclx,ncly,nclz,nxraf,nyraf,nzraf   ,&
        xi,xf,yi,yf,zi,zf,nobjx,nobjy,nobjz,&
        nobjmax,yp,nraf)
-    use param, only : istret, zero, half, one, two
+    use param, only : istret, itype, itype_rough, zero, half, one, two
     use var, only : ta2, ta3
     use variables, only : xp, zp
     use decomp_2d
@@ -257,11 +258,10 @@ contains
     zpraf=zero
     !x-pencil
     ep1=zero
-    if (itype.ne.itype_rough) then
-       call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
-    else
-       call geomcomplex(ep1,nx,xstart(1),xend(1),ny,xstart(2),xend(2),nz,xstart(3),xend(3),xp,yp,zp,one)
-    endif
+
+    !call geomcomplex(ep1,xstart(1),xend(1),ny,xstart(2),xend(2),xstart(3),xend(3),dx,yp,dz,one)
+    call geomcomplex(ep1,nx,xstart(1),xend(1),ny,xstart(2),xend(2),nz,xstart(3),xend(3),xp,yp,zp,one)
+
     if (nrank==0) print*,'    step 1'
     if(nclx)then
        dxraf =xlx/real(nxraf, mytype)
@@ -274,11 +274,10 @@ contains
     end do
     
     xepsi=zero
-    if (itype.ne.itype_rough) then
-       call geomcomplex(xepsi,1,nxraf,ny,xstart(2),xend(2),xstart(3),xend(3),dxraf,yp,dz,one)
-    else
-       call geomcomplex(xepsi,nxraf,1,nxraf,ny,xstart(2),xend(2),nz,xstart(3),xend(3),xpraf,yp,zp,one)
-    endif
+
+    !call geomcomplex(xepsi,1,nxraf,ny,xstart(2),xend(2),xstart(3),xend(3),dxraf,yp,dz,one)
+    call geomcomplex(xepsi,nxraf,1,nxraf,ny,xstart(2),xend(2),nz,xstart(3),xend(3),xpraf,yp,zp,one)
+
     if (nrank==0) print*,'    step 2'
     !y-pencil
     if(ncly)then
@@ -296,7 +295,10 @@ contains
     end if
     
     yepsi=zero
-    call geomcomplex(yepsi,ystart(1),yend(1),nyraf,1,nyraf,ystart(3),yend(3),dx,ypraf,dz,one)
+    
+    !call geomcomplex(yepsi,ystart(1),yend(1),nyraf,1,nyraf,ystart(3),yend(3),dx,ypraf,dz,one)
+    call geomcomplex(yepsi,nx,ystart(1),yend(1),nyraf,1,nyraf,nz,ystart(3),yend(3),xp,ypraf,zp,one)
+    
     if (nrank==0) print*,'    step 3'
     
     !z-pencil
@@ -311,11 +313,10 @@ contains
     end do
     
     zepsi=zero
-    if (itype.ne.itype_rough)
-       call geomcomplex(zepsi,zstart(1),zend(1),ny,zstart(2),zend(2),1,nzraf,dx,yp,dzraf,one)
-    else
-       call geomcomplex(zepsi,nx,zstart(1),zend(1),ny,zstart(2),zend(2),nzraf,1,nzraf,xp,yp,zpraf,one)
-    endif
+
+    !call geomcomplex(zepsi,zstart(1),zend(1),ny,zstart(2),zend(2),1,nzraf,dx,yp,dzraf,one)
+    call geomcomplex(zepsi,nx,zstart(1),zend(1),ny,zstart(2),zend(2),nzraf,1,nzraf,xp,yp,zpraf,one)
+    
     if (nrank==0) print*,'    step 4'
 
     !x-pencil
@@ -1019,177 +1020,7 @@ contains
   !############################################################################
 subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
      nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif)
-  use decomp_2d
-  USE decomp_2d_io
-  !USE complex_geometry, ONLY: iepm
-  implicit none
-  !
-  real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ep2
-  real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ep3
-  integer                            :: nx,ny,nz,nobjmax
-  integer,dimension(xstart(2):xend(2),xstart(3):xend(3)) :: nobjx
-  integer,dimension(ystart(1):yend(1),ystart(3):yend(3)) :: nobjy
-  integer,dimension(zstart(1):zend(1),zstart(2):zend(2)) :: nobjz
-  real(mytype),dimension(nobjmax,xstart(2):xend(2),xstart(3):xend(3)) :: xi,xf
-  real(mytype),dimension(nobjmax,ystart(1):yend(1),ystart(3):yend(3)) :: yi,yf
-  real(mytype),dimension(nobjmax,zstart(1):zend(1),zstart(2):zend(2)) :: zi,zf
-  integer,dimension(0:nobjmax,xstart(2):xend(2),xstart(3):xend(3)) :: nxipif,nxfpif
-  integer,dimension(0:nobjmax,ystart(1):yend(1),ystart(3):yend(3)) :: nyipif,nyfpif
-  integer,dimension(0:nobjmax,zstart(1):zend(1),zstart(2):zend(2)) :: nzipif,nzfpif
-  integer                            :: npif
-  integer                            :: i,j,k,iglobal,jglobal,kglobal,count
-  !
-  !if (nrank==0) call system('mkdir geomcomplex 2> /dev/null')
-  !
-  if (nrank==0) then
-     print *,'Writing geometry'
-     write(*,*) 'xstart1:', xstart(1)
-     write(*,*) 'xstart2:', xstart(2)
-     write(*,*) 'xstart3:', xstart(3)
-     write(*,*) 'xend1:', xend(1)
-     write(*,*) 'xend2:', xend(2)
-     write(*,*) 'xend3:', xend(3)
-     write(*,*) '++++++++++++++++++++++'
-     write(*,*) 'xsize1:', xsize(1)
-     write(*,*) 'xsize2:', xsize(2)
-     write(*,*) 'xsize3:', xsize(3)
-     write(*,*) '++++++++++++++++++++++'
-  endif 
-  if (nrank==0) then  
-     ! Write the X-epsi matrix to the file
-     open(unit=99, file='data/geometry/xepsi.dat', status='unknown')
-     do k=1,xsize(3)
-        do j=1,xsize(2)
-           do i=1,xsize(1)
-              iglobal = i
-              jglobal = xstart(2) + j - 1
-              kglobal = xstart(3) + k - 1          
-              write(99, *) ep1(i,j,k), iglobal, jglobal, kglobal
-           enddo
-        enddo
-     enddo
-     close(99)
-          ! Write the Y-epsi matrix to the file
-     open(unit=99, file='data/geometry/yepsi.dat', status='unknown')
-     do k=1,ysize(3)
-        do j=1,ysize(2)
-           do i=1,ysize(1)
-              iglobal = ystart(1) + i - 1
-              jglobal = j
-              kglobal = ystart(3) + k - 1           
-              write(99, *) ep2(i,j,k), iglobal, jglobal, kglobal
-           enddo
-        enddo
-     enddo
-     close(99) 
-     ! Write the Z-epsi matrix to the file
-     open(unit=99, file='data/geometry/zepsi.dat', status='unknown')
-     do k=1,zsize(3)
-        do j=1,zsize(2)
-           do i=1,zsize(1)
-              iglobal = zstart(1) + i - 1
-              jglobal = zstart(2) + j - 1
-              kglobal = k           
-              write(99, *) ep3(i,j,k), iglobal, jglobal, kglobal
-           enddo
-        enddo
-     enddo
-     close(99)  
-  ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     !x-pencil
-     open(99,file='data/geometry/nobjx.dat', status='unknown')
-     do k=xstart(3),xend(3)
-        do j=xstart(2),xend(2) 
-           write(99, *) nobjx(j,k)
-        enddo
-     enddo
-     close(99) 
-     !y-pencil
-     open(99,file='data/geometry/nobjy.dat', status='unknown')
-     do k=ystart(3),yend(3)
-        do i=ystart(1),yend(1)
-           write(99, *) nobjy(i,k)
-        enddo
-     enddo
-     close(99)  
-     !z-pencil
-     open(99,file='data/geometry/nobjz.dat', status='unknown')
-     do j=zstart(2),zend(2)
-        do i=zstart(1),zend(1)
-           write(99, *) nobjz(i,j)
-        enddo
-     enddo
-     close(99)   
-  ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  
-     !x-pencil
-     open(99,file='data/geometry/nxifpif.dat', status='unknown')
-     do k=xstart(3),xend(3)
-        do j=xstart(2),xend(2)
-           do i=0,nobjmax
-              write(99,*) nxipif(i,j,k),nxfpif(i,j,k)
-           enddo
-        enddo
-     enddo
-     close(99)
-     !y-pencil
-     open(99,file='data/geometry/nyifpif.dat', status='unknown')
-     do k=ystart(3),yend(3)
-        do i=ystart(1),yend(1)
-           do j=0,nobjmax
-              write(99,*) nyipif(j,i,k),nyfpif(j,i,k)
-           enddo
-        enddo
-     enddo
-     close(99)
-    !z-pencil
-     open(99,file='data/geometry/nzifpif.dat', status='unknown')
-     do j=zstart(2),zend(2)
-        do i=zstart(1),zend(1)
-           do k=0,nobjmax
-              write(99,*) nzipif(k,i,j),nzfpif(k,i,j)
-           enddo
-        enddo
-     enddo
-     close(99)
-  ! ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     !x-pencil
-     open(99,file='data/geometry/xixf.dat', status='unknown')
-     do k=xstart(3),xend(3)
-        do j=xstart(2),xend(2)
-           do i=1,nobjmax         
-              write(99,*) xi(i,j,k),xf(i,j,k)
-           enddo
-        enddo
-     enddo
-     close(99)
-     !y-pencil
-     open(99,file='data/geometry/yiyf.dat', status='unknown')
-     do k=ystart(3),yend(3)
-        do i=ystart(1),yend(1)
-           do j=1,nobjmax
-              write(99,*) yi(j,i,k),yf(j,i,k)
-           enddo
-        enddo
-     enddo
-     close(99)
-     !z-pencil
-     open(99,file='data/geometry/zizf.dat', status='unknown')
-     do j=zstart(2),zend(2)
-        do i=zstart(1),zend(1)
-           do k=1,nobjmax
-              write(99,*) zi(k,i,j),zf(k,i,j)
-           enddo
-        enddo
-     enddo
-     close(99)
-  endif  
-     !
-  return
-end subroutine write_geomcomplex
-subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
-     nxipif,nxfpif,nyipif,nyfpif,nzipif,nzfpif,nobjmax,npif)
-  use decomp_2d
+  USE decomp_2d
   USE decomp_2d_io
   !USE complex_geometry, ONLY: iepm
   implicit none

@@ -1759,7 +1759,7 @@ contains
   !********************************************************************
 
     use param
-    use ibm_param, only : offset
+    use ibm_param, only : wall_offset
     use variables
     use MPI
 
@@ -1776,7 +1776,7 @@ contains
     !Compute volumetric average of var in the inner fluid zone ep=0
     qm=zero
     ! Weighting for stratched mesh > TRY HERE ypw(j) <
-    wcoeff = dy / ((yly-offset) * real(xsize(1) * zsize(3), kind=mytype))
+    wcoeff = dy / ((yly-wall_offset) * real(xsize(1) * zsize(3), kind=mytype))
     do k=1,xsize(3)
         do jloc=1,xsize(2)
            j = jloc + xstart(2) - 1

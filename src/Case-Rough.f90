@@ -28,8 +28,9 @@ contains
     use decomp_2d_io
     use variables
     use param
-    use ibm_param, only : offset
+    use ibm_param, only : wall_offset
     use MPI
+    use mhd, only : mhd_equation,Bm,Bmean
 
     implicit none
 
@@ -191,7 +192,7 @@ contains
     use param
     use var, only : di2
     use variables
-    use mhd, only : Bm, mhd_active, mhd_equation 
+    use mhd, only : Bm, mhd_equation 
 
     implicit none
 
@@ -229,7 +230,7 @@ contains
        endif
     endif
 
-    if( mhd_active .and. iimplicit<=0 .and. mhd_equation ) then
+    if( mhd_active .and. iimplicit<=0 .and. mhd_equation=='induction' ) then
        ! FIXME add a test
        ! This is valid only when nclyB*1 = 2
        if (xstart(2) == 1) then
@@ -314,7 +315,7 @@ contains
 
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
-    use mhd, only : mhd_active
+    use param, only : mhd_active
     
     implicit none
 
@@ -348,7 +349,8 @@ contains
     use var, only : ta2,tb2,tc2,td2,te2,tf2,di2,ta3,tb3,tc3,td3,te3,tf3,di3
     use var, ONLY : nzmsize
     use visu, only : write_field
-    use mhd, only : mhd_active,Je, Bm
+    use param, only : mhd_active
+    use mhd, only : mhd_equation,Je, Bm
     
     use ibm_param, only : ubcx,ubcy,ubcz
 
@@ -407,7 +409,7 @@ contains
                  - th1(:,:,:) * tf1(:,:,:)
     call write_field(di1, ".", "critq", num, flush = .true.) ! Reusing temporary array, force flush
 
-    if (mhd_active) then
+    if (mhd_active .and. mhd_equation=='induction') then
       call write_field(Je(:,:,:,1), ".", "J_x", num, flush = .true.)
       call write_field(Je(:,:,:,2), ".", "J_y", num, flush = .true.)
       call write_field(Je(:,:,:,3), ".", "J_z", num, flush = .true.)
@@ -455,7 +457,6 @@ contains
   subroutine geomcomplex_rough(epsi,nxx,nxi,nxf,nyy,nyi,nyf,nzz,nzi,nzf,xxp,yyp,zzp,remp)
 
     use param, only : zero, one, two, three, ten, pi, yly, zlz
-    use param, only : new_rec
     use ibm_param
     use complex_geometry, only : nraf
 
