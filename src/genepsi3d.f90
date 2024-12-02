@@ -397,7 +397,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjymax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    ! if (nrank==0) print*,'        nobjymax=',mpi_aux_i
+    if (nrank==0) print*,'        nobjymax=',mpi_aux_i
 
     nobjyraf(:,:)=0
     jbug=0
@@ -453,7 +453,7 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjzmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    ! if (nrank==0) print*,'        nobjzmax=',mpi_aux_i
+    if (nrank==0) print*,'        nobjzmax=',mpi_aux_i
 
     nobjzraf(:,:)=0
     kbug=0
