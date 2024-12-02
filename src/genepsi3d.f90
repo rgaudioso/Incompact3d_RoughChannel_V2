@@ -269,8 +269,8 @@ contains
        dxraf =xlx/real(nxraf-1, mytype)
     endif
     ! Compute xpraf, if needed
-    do j = 1, nxraf
-       xpraf(j) = (j-1) * dxraf
+    do i = 1, nxraf
+       xpraf(i) = (i-1) * dxraf
     end do
     
     xepsi=zero
@@ -308,8 +308,8 @@ contains
        dzraf=zlz/real(nzraf-1, mytype)
     endif
    ! Compute zpraf, if needed
-    do j = 1, nxraf
-       xpraf(j) = (j-1) * dxraf
+    do k = 1, nzraf
+       zpraf(k) = (k-1) * dzraf
     end do
     
     zepsi=zero
