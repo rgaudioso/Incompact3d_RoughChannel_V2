@@ -491,7 +491,7 @@ contains
                 xm=xxp(i)
                     
                     ! Interpolated height value on refined mesh
-                    hraf = interp_hraf(i,j,k,xxp,yyp,zzp,nxx,nyy,nzz,iprint)
+                    hraf = interp_hraf(i,j,k,xxp,yyp,zzp,nxx,nyy,nzz)
                 
                     if (ym.lt.yly/two.and.ym.lt.hraf) then
                        epsi(i,j,k) = remp
@@ -555,7 +555,7 @@ contains
 
   !############################################################################
   !############################################################################
-  function interp_hraf(i,j,k,xxp,yyp,zzp,nxx,nyy,nzz,iprint)
+  function interp_hraf(i,j,k,xxp,yyp,zzp,nxx,nyy,nzz)
 
     use variables, only : xp,yp,zp
     use ibm_param
@@ -574,19 +574,14 @@ contains
     integer,parameter :: nrel=10 !relaxation factor
     integer           :: rafdir,ii,jj,kk,jside,&
                          imin,imax,kmin,kmax
-    integer           :: iprint
 
     !Refined direction?
-    iprint=1
     rafdir=0                      !(nx   ,ny   ,nz   )
     if (nxx.gt.nx) rafdir=1       !(nxraf,ny   ,nz   )
     if (nyy.gt.ny) rafdir=2       !(nx   ,nyraf,nz   )
     if (nzz.gt.nz) rafdir=3       !(nx   ,ny   ,nzraf)
     
-    !====DEBUG
-    if (nrank.eq.0.and.iprint.eq.1) print*, 'rafdir=', rafdir
-
-    !Lower or upper wall?
+        !Lower or upper wall?
     if (yyp(j).lt.yly/two) then
         jside=1
     else
