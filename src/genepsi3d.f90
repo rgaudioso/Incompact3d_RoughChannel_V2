@@ -425,10 +425,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjymaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    ! if (nrank==0) print*,'        nobjymaxraf=',mpi_aux_i
+    if (nrank==0) print*,'        nobjymaxraf=',mpi_aux_i
     call MPI_REDUCE(jbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
     ! if (nrank==0) print*,'        jbug=',mpi_aux_i
-    ! if (nrank==0) print*,'    step 6'
+    if (nrank==0) print*,'    step 6'
 
     !z-pencil
     nobjz(:,:)=0
@@ -481,10 +481,10 @@ contains
        enddo
     enddo
     call MPI_REDUCE(nobjzmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-    ! if (nrank==0) print*,'        nobjzmaxraf=',mpi_aux_i
+    if (nrank==0) print*,'        nobjzmaxraf=',mpi_aux_i
     call MPI_REDUCE(kbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
     ! if (nrank==0) print*,'        kbug=',mpi_aux_i
-    ! if (nrank==0) print*,'    step 7'
+    if (nrank==0) print*,'    step 7'
 
     !x-pencil
     do k=1,xsize(3)
