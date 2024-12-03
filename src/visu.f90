@@ -102,7 +102,7 @@ contains
           call decomp_2d_register_variable(io_name, scname, 1, 0, output2D, mytype)
        enddo
     endif
-    if (iibm.eq.2) call decomp_2d_register_variable(io_name, "epsi", 1, 0, output2D, mytype)
+    if (iibm.ne.0) call decomp_2d_register_variable(io_name, "epsi", 1, 0, output2D, mytype)
     
   end subroutine visu_init
 
@@ -272,7 +272,7 @@ contains
     endif
     
    ! Write epsi
-   if (iibm==2) call write_field(ep1,".","epsi",num,.true.)
+   if (iibm.ne.0) call write_field(ep1,".","epsi",num,.true.)
 
   end subroutine write_snapshot
 

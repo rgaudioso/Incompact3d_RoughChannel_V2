@@ -360,7 +360,7 @@ contains
     ! inputs
     real(mytype), intent(in) :: var, ep1
 
-    if (iibm==2) then
+    if (iibm.ne.0) then
       one_minus_ep1 = (one - ep1) * var
     else
       one_minus_ep1 = var
