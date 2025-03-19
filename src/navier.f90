@@ -1587,13 +1587,20 @@ contains
   !
   !********************************************************************
 
-    use param, only: one, two, three
+    use param, only: one, two, three,five
     use variables, only: numscalar
     use var, only: ta1, phi1
 
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ux,uy,uz,ep
+    real(mytype)                                        :: nu
+    real(mytype)                                        :: ub_c, phib_c ! Selected bulk constants
     integer                                             :: is
+    
+    !Define bulk quantities in channel flow
+    ub_c = two/three
+    nu = real(140./34.,8)
+    phib_c = nu/(five*ub_c) !From analytical solution
 
     !Bulk velocity correction
     call rough_bulk_u(ux,uy,uz,ep,two/three)
@@ -1601,7 +1608,7 @@ contains
     !Bulk temperature correction
     if (numscalar.ne.0) then
         do is=1,numscalar
-            call rough_bulk_phi(phi1(:,:,:,is),ux,ep,is,one)
+            call rough_bulk_phi(phi1(:,:,:,is),ux,ep,is,ub_c,phib_c)
         enddo
     endif
 
@@ -1673,7 +1680,7 @@ contains
   end subroutine rough_bulk_u
   !********************************************************************
   !
-  subroutine rough_bulk_phi(phi,ux,ep,is,phib_constant)
+  subroutine rough_bulk_phi(phi,ux,ep,is,ub_constant,phib_constant)
   !
   !********************************************************************
 
@@ -1687,7 +1694,7 @@ contains
     !INPUTS
     real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3))  :: phi,ux
     real(mytype),intent(in   ),dimension(xsize(1),xsize(2),xsize(3))  :: ep
-    real(mytype),intent(in   )                                        :: phib_constant !bulk temperature value
+    real(mytype),intent(in   )                                        :: ub_constant,phib_constant !bulk velocity and temperature value
     !LOCALS
     real(mytype)                                                      :: qv,qm !volumetric averaged values
     real(mytype)                                                      :: ym,zm,yc,zc
@@ -1726,8 +1733,8 @@ contains
 
     if (nrank.eq.0) then
         if (mod(itime, ilist)==0) write(*,256) is
-        if (mod(itime, ilist)==0) print *,'         Bulk phi before',qm
-        write(local_io_unit(is),*) real((itime-1)*dt,mytype),(phib_constant-qm)/(qv)
+        if (mod(itime, ilist)==0) print *,'         Bulk phi before',qm/ub_constant
+        write(local_io_unit(is),*) real((itime-1)*dt,mytype),(phib_constant-(qm/ub_constant))/(qv/ub_constant)
     endif
 
     !Correction
@@ -1735,7 +1742,7 @@ contains
         do j=1,xsize(2)
             do i=1,xsize(1)
                 if (ep(i,j,k).eq.0) then
-                    phi(i,j,k)=phi(i,j,k)+ux(i,j,k)*((phib_constant-qm)/qv)
+                    phi(i,j,k)=phi(i,j,k)+ux(i,j,k)*((phib_constant-(qm/ub_constant))/(qv/ub_constant))
                 else !smoothness for reconstruction
                     phi(i,j,k)=phi_out
                 endif
@@ -1746,7 +1753,7 @@ contains
     !Check new bulk temperature
     if (mod(itime, ilist)==0) then
         call rough_volume_avg(ux*phi,qm,ep)
-        if (nrank==0) print *,'          Bulk phi after',qm
+        if (nrank==0) print *,'          Bulk phi after',qm/ub_constant
     endif
     !
     return
